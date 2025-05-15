@@ -1,0 +1,133 @@
+# This workflow integrates with GitHub Actions for Android and iOS builds.
+#
+# Key features:
+# * Flutter setup and dependency resolution
+# * Android: Build APK and App Bundle
+# * iOS: Build IPA
+# * Caching of Flutter dependencies and build artifacts
+# * Triggered on pushes to the main branch and tags
+# * Uses Flutter stable channel
+#
+# Before you start, you need to configure the following secrets in your GitHub repository:
+#
+#  * `ANDROID_KEYSTORE_FILE`: (Optional, for signed APK/AAB) Base64-encoded Android keystore file.
+#  * `ANDROID_KEYSTORE_PASSWORD`: (Optional, for signed APK/AAB) Password for the Android keystore.
+#  * `ANDROID_KEY_ALIAS`: (Optional, for signed APK/AAB) Key alias from the Android keystore.
+#  * `ANDROID_KEY_PASSWORD`: (Optional, for signed APK/AAB) Password for the Android key.
+#
+name: Flutter CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    tags:        # Trigger on tags as well, e.g., v1.0.0
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build and Deploy
+    runs-on: macos-latest # Use macOS for building both iOS and Android
+
+    # Define build arguments as outputs.  These can be referenced by
+    # dependent jobs.
+    outputs:
+      apk_path: ${{ steps.build_android.outputs.apk_path }}
+      aab_path: ${{ steps.build_android.outputs.aab_path }}
+      ipa_path: ${{ steps.build_ios.outputs.ipa_path }}
+      app_name: ${{ steps.get_app_name.outputs.app_name }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for calculating the version
+
+      - name: Set up Git config
+        run: |
+          git config --global user.name "Navjot Singh"
+          git config --global user.email "navjot@gobrillianttech.com"
+
+      - name: Get App Name
+        id: get_app_name
+        run: |
+          APP_NAME=$(grep -oP 'name: \K(.*)' pubspec.yaml)
+          echo "::set-output name=app_name::$APP_NAME"
+
+      - name: Get Flutter version
+        run: |
+          flutter --version
+      - name: Set up Flutter
+        uses: flutter/flutter-action@v0
+        with:
+          channel: 'stable' # or: 'beta', 'dev', 'master'
+          flutter-version: '3.29.0' # Specify Flutter version.  Remove to use latest.
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check for updates
+        run: flutter pub outdated
+
+      - name: Analyze code
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test --coverage # Collect coverage.
+      - name: Check formatting
+        run: dart format --set-exit-if-changed .
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: true # fail the CI if the code coverage is not met
+      - name: Stash files that are not tracked
+        run: |
+          git stash --all --include-untracked
+
+      - name: Build Android
+        id: build_android
+        if: ${{ !cancelled() }} # Don't run if the job was cancelled
+        run: |
+          flutter build apk --split-per-abi
+          flutter build appbundle
+          echo "::set-output name=apk_path::build/app/outputs/flutter-apk/"
+          echo "::set-output name=aab_path::build/app/outputs/bundle/"
+
+      - name: Build iOS
+        id: build_ios
+        if: ${{ !cancelled() }}
+        # Build the IPA for distribution
+        run: |
+          flutter build ipa --export-options=ios/export_options.plist
+          echo "::set-output name=ipa_path::build/ios/ipa/"
+        env:
+          # Necessary for the flutter build ipa command
+          FLUTTER_BUILD_MODE: 'release'
+
+      - name: Upload APK to artifacts
+        if: ${{ !cancelled() && steps.build_android.outputs.apk_path != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: ${{ steps.build_android.outputs.apk_path }}
+          retention-days: 5
+
+      - name: Upload AAB to artifacts
+        if: ${{ !cancelled() && steps.build_android.outputs.aab_path != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-aab
+          path: ${{ steps.build_android.outputs.aab_path }}
+          retention-days: 5
+
+      - name: Upload IPA to artifacts
+        if: ${{ !cancelled() && steps.build_ios.outputs.ipa_path != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: ${{ steps.build_ios.outputs.ipa_path }}
+          retention-days: 5
