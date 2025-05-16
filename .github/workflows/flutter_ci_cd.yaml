@@ -61,8 +61,7 @@ jobs:
         run: |
           flutter --version
       - name: Set up Flutter
-        uses: flutter/flutter-action@v3
-        #uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v2
         with:
           channel: 'stable' # or: 'beta', 'dev', 'master'
           flutter-version: '3.29.0' # Specify Flutter version.  Remove to use latest.
