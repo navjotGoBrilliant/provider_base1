@@ -51,9 +51,6 @@ android {
         }
     }
 
-    bundle {
-        freezable = true
-    }
 }
 
 flutter {
