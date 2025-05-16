@@ -31,6 +31,8 @@ jobs:
   build:
     name: Build and Deploy
     runs-on: macos-latest # Use macOS for building both iOS and Android
+    env:
+      JAVA_HOME: "/Library/Java/JavaVirtualMachines/jdk-17.0.1.jdk/Contents/Home" # Set Java Home
 
     # Define build arguments as outputs.  These can be referenced by
     # dependent jobs.
@@ -91,6 +93,17 @@ jobs:
       - name: Stash files that are not tracked
         run: |
           git stash --all --include-untracked
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3 #changed
+        with:
+          sdkCommand: "sdkmanager --install 'platforms;android-34' 'build-tools;34.0.0' 'ndk;25.1.8937393'" # Use API 34
 
       - name: Build Android
         id: build_android
