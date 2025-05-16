@@ -54,7 +54,7 @@ jobs:
       - name: Get App Name
         id: get_app_name
         run: |
-          APP_NAME=$(grep -oP 'name: \K(.*)' pubspec.yaml)
+          APP_NAME=$(grep -o "name: " pubspec.yaml | awk -F': ' '{print $2}')
           echo "::set-output name=app_name::$APP_NAME"
 
       - name: Get Flutter version
