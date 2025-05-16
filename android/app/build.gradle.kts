@@ -1,14 +1,14 @@
 plugins {
     id("com.android.application")
-    id("kotlin-android")
+    id("org.jetbrains.kotlin.android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
     namespace = "com.providerbase1.provider_base1"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 34
+    ndkVersion = "25.1.10957561"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -24,17 +24,15 @@ android {
         applicationId = "com.providerbase1.provider_base1"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        ndkVersion = "27.0.12077973"
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0.0"
     }
 
-
     signingConfigs {
-        create("release") { // Use create to define a signing config
-            storeFile = file("providerbase.jks")  // Path to your keystore file
+        create("release") { // Corrected: Use create to define the 'release' signing config
+            storeFile = file("providerbase.jks")
             storePassword = "android"
             keyAlias = "android"
             keyPassword = "android"
@@ -42,8 +40,8 @@ android {
     }
 
     buildTypes {
-        getByName("release") { // Use getByName to access the release build type
-            signingConfig = signingConfigs.getByName("release") // Access the signing config
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release") // Corrected: Access the signing config correctly
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -53,9 +51,16 @@ android {
         }
     }
 
-
+    bundle {
+        freezable = true
+    }
 }
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
 }
