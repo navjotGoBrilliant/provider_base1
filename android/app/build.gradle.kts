@@ -25,6 +25,7 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
+        ndkVersion = "27.0.12077973"
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -32,7 +33,7 @@ android {
 
 
     signingConfigs {
-        release {
+        create("release") { // Use create to define a signing config
             storeFile = file("providerbase.jks")  // Path to your keystore file
             storePassword = "android"
             keyAlias = "android"
@@ -41,14 +42,17 @@ android {
     }
 
     buildTypes {
-        release {
-            // signingConfig = signingConfigs.getByName("release")
-            signingConfig signingConfigs.release  // Corrected: use signingConfigs.release
-            minifyEnabled true // Or true, depending on your needs
-            shrinkResources true
-            proguardFiles getDefaultProguardFile ('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        getByName("release") { // Use getByName to access the release build type
+            signingConfig = signingConfigs.getByName("release") // Access the signing config
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
+
 
 }
 
