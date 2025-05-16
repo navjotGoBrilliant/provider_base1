@@ -55,20 +55,20 @@ jobs:
         id: get_app_name
         run: |
           APP_NAME=$(grep -o "name: " pubspec.yaml | awk -F': ' '{print $2}')
-          echo "::set-output name=app_name::$APP_NAME"
+          echo "::set-output name=app_name::$APP_name"
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2  # Changed to subosito/flutter-action@v2
+        uses: subosito/flutter-action@v2
         with:
-          channel: 'stable' # or: 'beta', 'dev', 'master'
-          flutter-version: '3.29.0' # Specify Flutter version.  Remove to use latest.
+          channel: 'stable'
+          flutter-version: '3.29.0'
 
       - name: Flutter doctor
-        run: flutter doctor -v # Add flutter doctor to debug
+        run: flutter doctor -v
 
       - name: Get Flutter version
         run: |
-          flutter --version # Keep this step
+          flutter --version
 
       - name: Install dependencies
         run: flutter pub get
@@ -80,21 +80,21 @@ jobs:
         run: flutter analyze
 
       - name: Run tests
-        run: flutter test --coverage # Collect coverage.
+        run: flutter test --coverage
       - name: Check formatting
         run: dart format --set-exit-if-changed .
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          fail_ci_if_error: true # fail the CI if the code coverage is not met
+          fail_ci_if_error: true
       - name: Stash files that are not tracked
         run: |
           git stash --all --include-untracked
 
       - name: Build Android
         id: build_android
-        if: ${{ !cancelled() }} # Don't run if the job was cancelled
+        if: ${{ !cancelled() }}
         run: |
           flutter build apk --split-per-abi
           flutter build appbundle
@@ -104,13 +104,9 @@ jobs:
       - name: Build iOS
         id: build_ios
         if: ${{ !cancelled() }}
-        # Build the IPA for distribution
         run: |
-          flutter build ipa --export-options=ios/export_options.plist
+          flutter build ipa # Removed --export-options
           echo "::set-output name=ipa_path::build/ios/ipa/"
-        env:
-          # Necessary for the flutter build ipa command
-          FLUTTER_BUILD_MODE: 'release'
 
       - name: Upload APK to artifacts
         if: ${{ !cancelled() && steps.build_android.outputs.apk_path != '' }}
