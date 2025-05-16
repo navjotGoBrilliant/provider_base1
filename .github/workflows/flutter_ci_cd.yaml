@@ -103,6 +103,11 @@ jobs:
         with:
           sdkCommand: "sdkmanager --install 'platforms;android-34' 'build-tools;34.0.0' 'ndk;25.1.8937393'" # Use API 34
 
+      - name: Set NDK path
+        run: |
+          echo "ANDROID_NDK_HOME=$HOME/Library/Android/sdk/ndk/25.1.8937393" >> $GITHUB_ENV
+          echo "::set-output name=ndk_path::$HOME/Library/Android/sdk/ndk/25.1.8937393"
+
       - name: Build Android
         id: build_android
         if: ${{ !cancelled() }}
