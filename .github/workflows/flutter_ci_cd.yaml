@@ -88,6 +88,7 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           fail_ci_if_error: true
+          files: ./coverage/lcov.info # Explicitly specify the coverage file location
       - name: Stash files that are not tracked
         run: |
           git stash --all --include-untracked
