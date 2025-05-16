@@ -57,14 +57,18 @@ jobs:
           APP_NAME=$(grep -o "name: " pubspec.yaml | awk -F': ' '{print $2}')
           echo "::set-output name=app_name::$APP_NAME"
 
-      - name: Get Flutter version
-        run: |
-          flutter --version
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v2  # Changed to subosito/flutter-action@v2
         with:
           channel: 'stable' # or: 'beta', 'dev', 'master'
           flutter-version: '3.29.0' # Specify Flutter version.  Remove to use latest.
+
+      - name: Flutter doctor
+        run: flutter doctor -v # Add flutter doctor to debug
+
+      - name: Get Flutter version
+        run: |
+          flutter --version # Keep this step
 
       - name: Install dependencies
         run: flutter pub get
